@@ -4,14 +4,17 @@ class UsersController < ApplicationController
   before_action :admin_user, only: :destroy
   
   def new
+    redirect_for_signed_user
   	@user = User.new
   end
 
   def show
   	@user = User.find(params[:id])
+    @microposts = @user.microposts.paginate(page: params[:page])
   end
 
   def create
+    redirect_for_signed_user
     @user = User.new(user_params)    
     if @user.save
       sign_in @user
@@ -53,13 +56,6 @@ class UsersController < ApplicationController
                                    :password_confirmation)
     end
 
-    def signed_in_user
-        unless signed_in?
-            store_location
-            redirect_to signin_url, notice: "Please sign in"
-        end
-    end
-
     def correct_user
       @user = User.find(params[:id])
       redirect_to(root_url) unless current_user?(@user)
@@ -69,4 +65,9 @@ class UsersController < ApplicationController
       redirect_to(root_url) unless current_user.admin?
     end
 
+    def redirect_for_signed_user
+      if signed_in?
+        redirect_to root_url
+      end
+    end
 end
